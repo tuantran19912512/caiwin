@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     CÔNG CỤ TRIỂN KHAI WINDOWS TỰ ĐỘNG - V11.5 (FIX TRIỆT ĐỂ LỖI GITHUB)
     Tối ưu hóa: Offline Registry, Unattend, Smart Driver Network, Sync App từ CSV Github
