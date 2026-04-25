@@ -472,7 +472,7 @@ Get-AppxPackage -AllUsers | Where-Object { `$_.Name -notmatch '^System|^Microsof
 
         if ($Wifi) {
             $Cmd += ":WAIT_WIFI`r`n"
-            $Cmd += "netsh wlan show interfaces | find /i \"wi-fi\" >nul 2>&1`r`n"
+            $Cmd += "netsh wlan show interfaces 2>nul | findstr /i State >nul 2>&1`r`n"
             $Cmd += "if errorlevel 1 ( ping 127.0.0.1 -n 3 >nul & goto WAIT_WIFI )`r`n"
             $Cmd += "for %%f in (`"%~dp0*.xml`") do netsh wlan add profile filename=`"%%f`" user=all >nul 2>&1`r`n"
             $Cmd += "for %%f in (`"%~dp0*.xml`") do netsh wlan connect name=`"%%~nf`" >nul 2>&1`r`n"
