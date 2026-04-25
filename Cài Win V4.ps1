@@ -1,20 +1,12 @@
 <#
 .SYNOPSIS
-    CÔNG CỤ TRIỂN KHAI WINDOWS TỰ ĐỘNG - V11.5 (FIX TRIỆT ĐỂ LỖI GITHUB)
-    Tối ưu hóa: Offline Registry, Unattend, Smart Driver Network, Sync App từ CSV Github
+    CÔNG CỤ TRIỂN KHAI WINDOWS TỰ ĐỘNG - BẢN TIÊU CHUẨN (ZERO-TOUCH PURE)
+    Tối ưu hóa: Offline Registry, Unattend, Smart Driver Network, Bloatware Safe Mode
 #>
 
 # ==========================================
-# 1. THIẾT LẬP MÔI TRƯỜNG & YÊU CẦU QUYỀN
+# 1. YÊU CẦU QUYỀN ADMIN & ÉP LUỒNG STA
 # ==========================================
-# Ép chuẩn TLS 1.2 tuyệt đối bằng mã 3072 (Tránh lỗi văng Tls13 trên Win cũ)
-[Net.ServicePointManager]::SecurityProtocol = 3072
-# Hàm giải mã API Key từ file của Tuấn
-function GiaiMa-ChuaKhoa ($ChuoiMaHoa) { return [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($ChuoiMaHoa)) }
-$Global:DanhSachKhoaAPI = @(
-    (GiaiMa-ChuaKhoa "QUl6YVN5Q3VKUkJaTDZnUU8tdVZOMWVvdHhmMlppTXNtYy1sandR"),
-    (GiaiMa-ChuaKhoa "QUl6YVN5QlRhVmRQdmlLaUJyR0JUVk0tUlRiVW51QUdFUzRWck1v")
-)
 if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs; exit
 }
@@ -32,11 +24,11 @@ $Global:TrangThaiHethong = [hashtable]::Synchronized(@{
 })
 
 # ==========================================
-# 3. GIAO DIỆN WPF (DYNAMIC APP TAB)
+# 3. GIAO DIỆN WPF (3 TAB TIÊU CHUẨN)
 # ==========================================
 [xml]$XAML = @"
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        Title="Zero-Touch Deployment V11.5 (Stable Github Sync)" 
+        Title="Zero-Touch OS Deployment (Stable Edition)" 
         Width="880" Height="780" MinWidth="800" MinHeight="650" 
         WindowStartupLocation="CenterScreen" Background="#F8FAFC">
     <DockPanel Margin="15">
@@ -112,9 +104,9 @@ $Global:TrangThaiHethong = [hashtable]::Synchronized(@{
                             <CheckBox Name="ChkBackupAll" Content="Rút Toàn bộ Driver máy" IsChecked="False" FontWeight="Bold" Margin="0,0,0,12" FontSize="13"/>
                             <CheckBox Name="ChkBackupNet" Content="Chỉ rút Driver LAN/Wi-Fi" IsChecked="True" Foreground="#D97706" FontWeight="Bold" Margin="0,0,0,12" FontSize="13"/>
                             <CheckBox Name="ChkTPM" Content="Bypass TPM 2.0 &amp; CPU" IsChecked="True" Foreground="#E11D48" FontWeight="Bold" Margin="0,0,0,12" FontSize="13"/>
-
+                            <CheckBox Name="ChkUltraView" Content="Tải &amp; Bật UltraView (Hiện ngay)" IsChecked="True" Foreground="#0284C7" FontWeight="Bold" FontSize="13" Margin="0,0,0,12"/>
                             <CheckBox Name="ChkWifi" Content="Lưu Pass &amp; Tên Wi-Fi" IsChecked="True" Foreground="#D97706" FontWeight="Bold" FontSize="13" Margin="0,0,0,12"/>
-
+                            <CheckBox Name="ChkAnyDesk" Content="Tải AnyDesk (Hiện ngay)" IsChecked="False" FontSize="13" Margin="0,0,0,12"/>
                         </UniformGrid>
                     </StackPanel>
                 </TabItem>
@@ -150,7 +142,6 @@ $Global:TrangThaiHethong = [hashtable]::Synchronized(@{
                         </UniformGrid>
                     </StackPanel>
                 </TabItem>
-
             </TabControl>
 
             <GridSplitter Grid.Row="1" Height="5" HorizontalAlignment="Stretch" VerticalAlignment="Center" Background="#CBD5E1" Cursor="SizeNS" Margin="0,2,0,5"/>
@@ -164,13 +155,13 @@ $Global:TrangThaiHethong = [hashtable]::Synchronized(@{
 
 $TrinhDoc = (New-Object System.Xml.XmlNodeReader $XAML); $UI = [Windows.Markup.XamlReader]::Load($TrinhDoc)
 
-# Ánh xạ Biến Giao diện Core
+# Ánh xạ Biến Giao diện
 $HopFileBoCai = $UI.FindName("HopFileBoCai"); $NutChonFile = $UI.FindName("NutChonFile"); $DanhSachBanWin = $UI.FindName("DanhSachBanWin")
 $HopThuMucDriver = $UI.FindName("HopThuMucDriver"); $NutChonDriver = $UI.FindName("NutChonDriver"); $TxtTenUser = $UI.FindName("TxtTenUser")
 $ChkGhiDeUnattend = $UI.FindName("ChkGhiDeUnattend"); $KhuVucRegion = $UI.FindName("KhuVucRegion")
 $ChkOOBE = $UI.FindName("ChkOOBE"); $ChkLogon = $UI.FindName("ChkLogon"); $ChkTPM = $UI.FindName("ChkTPM")
-$ChkWifi = $UI.FindName("ChkWifi")
-$ChkBackupAll = $UI.FindName("ChkBackupAll"); $ChkBackupNet = $UI.FindName("ChkBackupNet")
+$ChkUltraView = $UI.FindName("ChkUltraView"); $ChkWifi = $UI.FindName("ChkWifi")
+$ChkBackupAll = $UI.FindName("ChkBackupAll"); $ChkBackupNet = $UI.FindName("ChkBackupNet"); $ChkAnyDesk = $UI.FindName("ChkAnyDesk")
 $HopNhatKy = $UI.FindName("HopNhatKy"); $TxtTrangThai = $UI.FindName("TxtTrangThai"); $TxtPhanTram = $UI.FindName("TxtPhanTram")
 $ThanhTienDo = $UI.FindName("ThanhTienDo"); $NutKichHoat = $UI.FindName("NutKichHoat")
 
@@ -220,9 +211,7 @@ function Quet-ISO_WIM {
     try {
         if ($File -match '(?i)\.iso$') {
             Mount-DiskImage -ImagePath $File -PassThru | Out-Null; Start-Sleep 1
-            $Vol = (Get-DiskImage -ImagePath $File | Get-Volume)
-            if (-not $Vol -or -not $Vol.DriveLetter) { throw "Khong doc duoc ky tu o dia ISO!" }
-            $KyTu = $Vol.DriveLetter[0]
+            $KyTu = (Get-DiskImage -ImagePath $File | Get-Volume).DriveLetter[0]
             $FileWim = "$($KyTu):\sources\install.wim"; if (-not (Test-Path $FileWim)) { $FileWim = "$($KyTu):\sources\install.esd" }
             $Mount = $true
         }
@@ -244,7 +233,7 @@ $NutChonDriver.Add_Click({ $F = New-Object System.Windows.Forms.FolderBrowserDia
 # 6. KỊCH BẢN NỀN (XỬ LÝ LÕI)
 # ==========================================
 $KichBanNen = {
-    param($G, $FileCai, $FileDriver, $IndexLoi, $GhiDeUnattend, $TenUser, $OOBE, $Logon, $TPM, $Wifi, $BackupAll, $BackupNet, $Tweaks, $APIKeys)
+    param($G, $FileCai, $FileDriver, $IndexLoi, $GhiDeUnattend, $TenUser, $OOBE, $Logon, $TPM, $UltraView, $AnyDesk, $Wifi, $BackupAll, $BackupNet, $Tweaks)
     
     function InLog($txt) { $G.Log += "`n[$(Get-Date -f 'HH:mm:ss')] $txt" }
     
@@ -290,9 +279,7 @@ $KichBanNen = {
         if ($FileCai -match '(?i)\.iso$') {
             $G.TrangThai = "BƯỚC 2/6: Đang xả nén bộ cài từ ISO..."
             Mount-DiskImage -ImagePath $FileCai -PassThru | Out-Null; Start-Sleep 1
-            $VolIso = (Get-DiskImage -ImagePath $FileCai | Get-Volume)
-            if (-not $VolIso -or -not $VolIso.DriveLetter) { throw "Khong doc duoc ky tu o dia ISO khi xu ly bo cai!" }
-            $KyTuIso = $VolIso.DriveLetter[0]
+            $KyTuIso = (Get-DiskImage -ImagePath $FileCai | Get-Volume).DriveLetter[0]
             $Wim = "$($KyTuIso):\sources\install.wim"; $Esd = "$($KyTuIso):\sources\install.esd"
             $FileTrich = if (Test-Path $Wim) { $Wim } else { $Esd }
             $FileCaiDich = Join-Path ([System.IO.Path]::GetDirectoryName($FileCai)) ("install_extracted" + [System.IO.Path]::GetExtension($FileTrich))
@@ -375,7 +362,7 @@ $KhốiUser$KhốiLogonXML
         }
 
         # --- BƯỚC 4: TẠO SCRIPT POST-INSTALL & TWEAKS ---
-        $G.TrangThai = "BƯỚC 4/6: Đóng gói Script Hệ thống & Apps..."; $G.TienDo = 50
+        $G.TrangThai = "BƯỚC 4/6: Đóng gói Script Hệ thống..."; $G.TienDo = 50
         $Cmd = "@echo off`r`n"
         $Cmd += "manage-bde -off C: >nul 2>&1`r`n"
         
@@ -427,27 +414,25 @@ Get-AppxPackage -AllUsers | Where-Object { `$_.Name -notmatch '^System|^Microsof
             $Cmd += "powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"C:\Windows\Setup\Scripts\RemoveBloat_ZT.ps1`" >nul 2>&1`r`n"
         }
 
-        if ($Wifi) {
-            $Cmd += ":WAIT_WIFI`r`n"
-            $Cmd += "netsh wlan show interfaces 2>nul | findstr /i State >nul 2>&1`r`n"
-            $Cmd += "if errorlevel 1 ( ping 127.0.0.1 -n 3 >nul & goto WAIT_WIFI )`r`n"
-            $Cmd += "for %%f in (`"%~dp0*.xml`") do netsh wlan add profile filename=`"%%f`" user=all >nul 2>&1`r`n"
-            $Cmd += "for %%f in (`"%~dp0*.xml`") do netsh wlan connect name=`"%%~nf`" >nul 2>&1`r`n"
-        }
+        if ($Wifi) { $Cmd += "for %%f in (`"%~dp0*.xml`") do netsh wlan add profile filename=`"%%f`" user=all >nul 2>&1`r`n" }
         
+        $CanDoiMang = $UltraView -or $AnyDesk
+        if ($CanDoiMang) {
+            $Cmd += "echo Dang doi Internet...`r`nping 127.0.0.1 -n 15 >nul`r`n"
+        }
 
         if ($UltraView) {
-            $Cmd += "ping 127.0.0.1 -n 10 >nul`r`n"
-            $Cmd += "powershell -Command `"[Net.ServicePointManager]::SecurityProtocol = 3072; (New-Object Net.WebClient).DownloadFile('https://dl2.ultraviewer.net/UltraViewer_setup_6.6_vi.exe','C:\UltraView_Setup.exe')`"`r`n"
+            $Cmd += "powershell -Command `"[Net.ServicePointManager]::SecurityProtocol = 3072; Invoke-WebRequest -Uri 'https://dl2.ultraviewer.net/UltraViewer_setup_6.6_vi.exe' -OutFile 'C:\UltraView_Setup.exe'`"`r`n"
             $Cmd += "start /wait C:\UltraView_Setup.exe /verysilent /norestart`r`n"
             $Cmd += "start `"`" `"C:\Program Files (x86)\UltraViewer\UltraViewer_Desktop.exe`"`r`n"
             $Cmd += "del /f /q C:\UltraView_Setup.exe`r`n"
         }
 
-        if ($AnyDesk) {
-            $Cmd += "powershell -Command `"[Net.ServicePointManager]::SecurityProtocol = 3072; (New-Object Net.WebClient).DownloadFile('https://download.anydesk.com/AnyDesk.exe','C:\Users\Public\Desktop\AnyDesk.exe')`" >nul 2>&1`r`n"
-            $Cmd += "start `"`" `"C:\Users\Public\Desktop\AnyDesk.exe`"`r`n"
+        if ($AnyDesk) { 
+            $Cmd += "powershell -Command `"[Net.ServicePointManager]::SecurityProtocol = 3072; Invoke-WebRequest -Uri 'https://download.anydesk.com/AnyDesk.exe' -OutFile 'C:\Users\Public\Desktop\AnyDesk.exe'`" >nul 2>&1`r`n"
+            $Cmd += "start `"`" `"C:\Users\Public\Desktop\AnyDesk.exe`"`r`n" 
         }
+
         $Cmd += "del %0`r`n"
         $Cmd | Out-File "$env:TEMP\PostInstall_ZT.cmd" -Encoding oem
 
@@ -472,7 +457,6 @@ Get-AppxPackage -AllUsers | Where-Object { `$_.Name -notmatch '^System|^Microsof
         
         if ($Tweaks.Bloatware) { Copy-Item "$env:TEMP\RemoveBloat_ZT.ps1" "$ThuMucMnt\Windows\System32\RemoveBloat_ZT.ps1" -Force }
         if ($GhiDeUnattend -and (Test-Path "$env:TEMP\unattend_ZT.xml")) { Copy-Item "$env:TEMP\unattend_ZT.xml" "$ThuMucMnt\Windows\System32\unattend_ZT.xml" -Force }
-
         
         # --- BƯỚC 6: LỆNH CHẠY TRONG WINRE (OFFLINE REGISTRY INJECTION) ---
         $G.TrangThai = "BƯỚC 6/6: Ghi kịch bản tự động hóa..."; $G.TienDo = 80
@@ -521,7 +505,7 @@ if not "%DRIVER_DRIVE%"=="" (
 for %%p in (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z) do ( if exist %%p:\EFI\Microsoft\Boot\BCD ( attrib -h -s -r %%p:\EFI\Microsoft\Boot\BCD & del /f /q %%p:\EFI\Microsoft\Boot\BCD ) )
 bcdboot W:\Windows
 
-bcdedit /timeout 0 & bcdedit /set {default} recoveryenabled No & bcdedit /set {default} bootstatuspolicy IgnoreAllFailures
+bcdedit /timeout 0; bcdedit /set {default} recoveryenabled No; bcdedit /set {default} bootstatuspolicy IgnoreAllFailures
 
 :: Chép Scripts
 copy /Y X:\Windows\System32\PostInstall_ZT.cmd W:\Windows\Setup\Scripts\PostInstall_ZT.cmd
@@ -562,13 +546,6 @@ $NutKichHoat.Add_Click({
     if ( ($ChkBackupAll.IsChecked -or $ChkBackupNet.IsChecked -or $ChkWifi.IsChecked) -and -not $FileDriver ) { [System.Windows.Forms.MessageBox]::Show("Để Backup Driver/Wi-Fi, vui lòng 'Chọn Driver'.", "LỖI", 0, 16); return }
     if ([System.Windows.Forms.MessageBox]::Show("HỆ THỐNG SẼ FORMAT Ổ C.`nTiếp tục?", "CẢNH BÁO", 4, 48) -ne 'Yes') { return }
 
-    # Quét danh sách phần mềm đã chọn từ Tab 4
-
-    $DanhSachAppDaChon = @()
-
-        }
-    }
-
     $UI.Cursor = [System.Windows.Input.Cursors]::Wait; $NutKichHoat.IsEnabled = $false
     $Global:TrangThaiHethong.TienDo = 0; $Global:TrangThaiHethong.Log = ""; $Global:TrangThaiHethong.KetThuc = $false; $DongHoTimer.Start()
 
@@ -580,12 +557,11 @@ $NutKichHoat.Add_Click({
         Visual = $ChkVisual.IsChecked; Widgets = $ChkWidgets.IsChecked; Notif = $ChkNotif.IsChecked;
         Sticky = $ChkSticky.IsChecked; News = $ChkNews.IsChecked; Timezone = $ChkTimezone.IsChecked;
         UAC = $ChkUAC.IsChecked; MenuClassic = $ChkMenuClassic.IsChecked; Ext = $ChkExt.IsChecked;
-        NumLock = $ChkNumLock.IsChecked; Wmic = $ChkWmic.IsChecked;
-
+        NumLock = $ChkNumLock.IsChecked; Wmic = $ChkWmic.IsChecked
     }
 
     $MoiTruong = [runspacefactory]::CreateRunspace(); $MoiTruong.ApartmentState = "STA"; $MoiTruong.Open()
-    $TienTrinh = [powershell]::Create().AddScript($KichBanNen).AddArgument($Global:TrangThaiHethong).AddArgument($FileCai).AddArgument($FileDriver).AddArgument($IndexLoi).AddArgument($ChkGhiDeUnattend.IsChecked).AddArgument($TxtTenUser.Text).AddArgument($ChkOOBE.IsChecked).AddArgument($ChkLogon.IsChecked).AddArgument($ChkTPM.IsChecked).AddArgument($ChkUltraView.IsChecked).AddArgument($ChkAnyDesk.IsChecked).AddArgument($ChkWifi.IsChecked).AddArgument($ChkBackupAll.IsChecked).AddArgument($ChkBackupNet.IsChecked).AddArgument($Tweaks).AddArgument($Global:DanhSachKhoaAPI)
+    $TienTrinh = [powershell]::Create().AddScript($KichBanNen).AddArgument($Global:TrangThaiHethong).AddArgument($FileCai).AddArgument($FileDriver).AddArgument($IndexLoi).AddArgument($ChkGhiDeUnattend.IsChecked).AddArgument($TxtTenUser.Text).AddArgument($ChkOOBE.IsChecked).AddArgument($ChkLogon.IsChecked).AddArgument($ChkTPM.IsChecked).AddArgument($ChkUltraView.IsChecked).AddArgument($ChkAnyDesk.IsChecked).AddArgument($ChkWifi.IsChecked).AddArgument($ChkBackupAll.IsChecked).AddArgument($ChkBackupNet.IsChecked).AddArgument($Tweaks)
     $TienTrinh.Runspace = $MoiTruong; $TienTrinh.BeginInvoke() | Out-Null
 })
 
