@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     CÔNG CỤ TRIỂN KHAI WINDOWS TỰ ĐỘNG - V11.5 (FIX TRIỆT ĐỂ LỖI GITHUB)
     Tối ưu hóa: Offline Registry, Unattend, Smart Driver Network, Sync App từ CSV Github
@@ -263,9 +263,7 @@ function Quet-ISO_WIM {
     try {
         if ($File -match '(?i)\.iso$') {
             Mount-DiskImage -ImagePath $File -PassThru | Out-Null; Start-Sleep 1
-            $Vol = (Get-DiskImage -ImagePath $File | Get-Volume)
-            if (-not $Vol -or -not $Vol.DriveLetter) { throw "Khong doc duoc ky tu o dia ISO!" }
-            $KyTu = $Vol.DriveLetter[0]
+            $KyTu = (Get-DiskImage -ImagePath $File | Get-Volume).DriveLetter[0]
             $FileWim = "$($KyTu):\sources\install.wim"; if (-not (Test-Path $FileWim)) { $FileWim = "$($KyTu):\sources\install.esd" }
             $Mount = $true
         }
@@ -333,9 +331,7 @@ $KichBanNen = {
         if ($FileCai -match '(?i)\.iso$') {
             $G.TrangThai = "BƯỚC 2/6: Đang xả nén bộ cài từ ISO..."
             Mount-DiskImage -ImagePath $FileCai -PassThru | Out-Null; Start-Sleep 1
-            $VolIso = (Get-DiskImage -ImagePath $FileCai | Get-Volume)
-            if (-not $VolIso -or -not $VolIso.DriveLetter) { throw "Khong doc duoc ky tu o dia ISO khi xu ly bo cai!" }
-            $KyTuIso = $VolIso.DriveLetter[0]
+            $KyTuIso = (Get-DiskImage -ImagePath $FileCai | Get-Volume).DriveLetter[0]
             $Wim = "$($KyTuIso):\sources\install.wim"; $Esd = "$($KyTuIso):\sources\install.esd"
             $FileTrich = if (Test-Path $Wim) { $Wim } else { $Esd }
             $FileCaiDich = Join-Path ([System.IO.Path]::GetDirectoryName($FileCai)) ("install_extracted" + [System.IO.Path]::GetExtension($FileTrich))
@@ -478,14 +474,14 @@ Get-AppxPackage -AllUsers | Where-Object { `$_.Name -notmatch '^System|^Microsof
         }
 
         if ($UltraView) {
-            $Cmd += "powershell -Command `"[Net.ServicePointManager]::SecurityProtocol = 3072; (New-Object Net.WebClient).DownloadFile('https://dl2.ultraviewer.net/UltraViewer_setup_6.6_vi.exe','C:\UltraView_Setup.exe')`"`r`n"
+            $Cmd += "powershell -Command `"[Net.ServicePointManager]::SecurityProtocol = 3072; Invoke-WebRequest -Uri 'https://dl2.ultraviewer.net/UltraViewer_setup_6.6_vi.exe' -OutFile 'C:\UltraView_Setup.exe'`"`r`n"
             $Cmd += "start /wait C:\UltraView_Setup.exe /verysilent /norestart`r`n"
             $Cmd += "start `"`" `"C:\Program Files (x86)\UltraViewer\UltraViewer_Desktop.exe`"`r`n"
             $Cmd += "del /f /q C:\UltraView_Setup.exe`r`n"
         }
 
         if ($AnyDesk) { 
-            $Cmd += "powershell -Command `"[Net.ServicePointManager]::SecurityProtocol = 3072; (New-Object Net.WebClient).DownloadFile('https://download.anydesk.com/AnyDesk.exe','C:\Users\Public\Desktop\AnyDesk.exe')`" >nul 2>&1`r`n"
+            $Cmd += "powershell -Command `"[Net.ServicePointManager]::SecurityProtocol = 3072; Invoke-WebRequest -Uri 'https://download.anydesk.com/AnyDesk.exe' -OutFile 'C:\Users\Public\Desktop\AnyDesk.exe'`" >nul 2>&1`r`n"
             $Cmd += "start `"`" `"C:\Users\Public\Desktop\AnyDesk.exe`"`r`n" 
         }
 
@@ -678,7 +674,7 @@ if not "%DRIVER_DRIVE%"=="" (
 for %%p in (A B C D E F G H I J K L M N O P Q R S T U V W X Y Z) do ( if exist %%p:\EFI\Microsoft\Boot\BCD ( attrib -h -s -r %%p:\EFI\Microsoft\Boot\BCD & del /f /q %%p:\EFI\Microsoft\Boot\BCD ) )
 bcdboot W:\Windows
 
-bcdedit /timeout 0 & bcdedit /set {default} recoveryenabled No & bcdedit /set {default} bootstatuspolicy IgnoreAllFailures
+bcdedit /timeout 0; bcdedit /set {default} recoveryenabled No; bcdedit /set {default} bootstatuspolicy IgnoreAllFailures
 
 :: Chép Scripts
 copy /Y X:\Windows\System32\PostInstall_ZT.cmd W:\Windows\Setup\Scripts\PostInstall_ZT.cmd
@@ -745,7 +741,7 @@ $NutKichHoat.Add_Click({
     }
 
     $MoiTruong = [runspacefactory]::CreateRunspace(); $MoiTruong.ApartmentState = "STA"; $MoiTruong.Open()
-    $TienTrinh = [powershell]::Create().AddScript($KichBanNen).AddArgument($Global:TrangThaiHethong).AddArgument($FileCai).AddArgument($FileDriver).AddArgument($IndexLoi).AddArgument($ChkGhiDeUnattend.IsChecked).AddArgument($TxtTenUser.Text).AddArgument($ChkOOBE.IsChecked).AddArgument($ChkLogon.IsChecked).AddArgument($ChkTPM.IsChecked).AddArgument($ChkUltraView.IsChecked).AddArgument($ChkAnyDesk.IsChecked).AddArgument($ChkWifi.IsChecked).AddArgument($ChkBackupAll.IsChecked).AddArgument($ChkBackupNet.IsChecked).AddArgument($Tweaks).AddArgument($Global:DanhSachKhoaAPI)
+    $TienTrinh = [powershell]::Create().AddScript($KichBanNen).AddArgument($Global:TrangThaiHethong).AddArgument($FileCai).AddArgument($FileDriver).AddArgument($IndexLoi).AddArgument($ChkGhiDeUnattend.IsChecked).AddArgument($TxtTenUser.Text).AddArgument($ChkOOBE.IsChecked).AddArgument($ChkLogon.IsChecked).AddArgument($ChkTPM.IsChecked).AddArgument($ChkUltraView.IsChecked).AddArgument($ChkAnyDesk.IsChecked).AddArgument($ChkWifi.IsChecked).AddArgument($ChkBackupAll.IsChecked).AddArgument($ChkBackupNet.IsChecked).AddArgument($Tweaks)
     $TienTrinh.Runspace = $MoiTruong; $TienTrinh.BeginInvoke() | Out-Null
 })
 
