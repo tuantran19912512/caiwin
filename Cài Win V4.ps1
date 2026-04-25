@@ -112,9 +112,9 @@ $Global:TrangThaiHethong = [hashtable]::Synchronized(@{
                             <CheckBox Name="ChkBackupAll" Content="Rút Toàn bộ Driver máy" IsChecked="False" FontWeight="Bold" Margin="0,0,0,12" FontSize="13"/>
                             <CheckBox Name="ChkBackupNet" Content="Chỉ rút Driver LAN/Wi-Fi" IsChecked="True" Foreground="#D97706" FontWeight="Bold" Margin="0,0,0,12" FontSize="13"/>
                             <CheckBox Name="ChkTPM" Content="Bypass TPM 2.0 &amp; CPU" IsChecked="True" Foreground="#E11D48" FontWeight="Bold" Margin="0,0,0,12" FontSize="13"/>
-                            <CheckBox Name="ChkUltraView" Content="Tải &amp; Bật UltraView (Hiện ngay)" IsChecked="True" Foreground="#0284C7" FontWeight="Bold" FontSize="13" Margin="0,0,0,12"/>
+
                             <CheckBox Name="ChkWifi" Content="Lưu Pass &amp; Tên Wi-Fi" IsChecked="True" Foreground="#D97706" FontWeight="Bold" FontSize="13" Margin="0,0,0,12"/>
-                            <CheckBox Name="ChkAnyDesk" Content="Tải AnyDesk (Hiện ngay)" IsChecked="False" FontSize="13" Margin="0,0,0,12"/>
+
                         </UniformGrid>
                     </StackPanel>
                 </TabItem>
@@ -151,17 +151,6 @@ $Global:TrangThaiHethong = [hashtable]::Synchronized(@{
                     </StackPanel>
                 </TabItem>
 
-                <TabItem Header="💿 KHO PHẦN MỀM" FontSize="14" FontWeight="Bold" Foreground="#0F172A">
-                    <StackPanel Margin="10,15,10,10">
-                        <TextBlock Name="TxtTrangThaiApp" Text="Đang tải dữ liệu từ Github..." FontWeight="Bold" Foreground="#D97706" Margin="0,0,0,15" FontSize="14"/>
-                        <ScrollViewer Height="180" VerticalScrollBarVisibility="Auto">
-                            <WrapPanel Name="KhungPhanMem" Orientation="Horizontal" ItemWidth="180" Margin="5,0,0,0"/>
-                        </ScrollViewer>
-                        <Border Background="#FEF3C7" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,15,0,0">
-                            <TextBlock Text="💡 Toàn bộ Checkbox trên được lấy trực tiếp từ file DanhSachPhanMem.csv của bạn. Dữ liệu cài ngầm (Silent) sẽ tự động khớp theo từ điển trong bộ VietToolbox." Foreground="#B45309" FontStyle="Italic" FontSize="12" TextWrapping="Wrap"/>
-                        </Border>
-                    </StackPanel>
-                </TabItem>
             </TabControl>
 
             <GridSplitter Grid.Row="1" Height="5" HorizontalAlignment="Stretch" VerticalAlignment="Center" Background="#CBD5E1" Cursor="SizeNS" Margin="0,2,0,5"/>
@@ -180,8 +169,8 @@ $HopFileBoCai = $UI.FindName("HopFileBoCai"); $NutChonFile = $UI.FindName("NutCh
 $HopThuMucDriver = $UI.FindName("HopThuMucDriver"); $NutChonDriver = $UI.FindName("NutChonDriver"); $TxtTenUser = $UI.FindName("TxtTenUser")
 $ChkGhiDeUnattend = $UI.FindName("ChkGhiDeUnattend"); $KhuVucRegion = $UI.FindName("KhuVucRegion")
 $ChkOOBE = $UI.FindName("ChkOOBE"); $ChkLogon = $UI.FindName("ChkLogon"); $ChkTPM = $UI.FindName("ChkTPM")
-$ChkUltraView = $UI.FindName("ChkUltraView"); $ChkWifi = $UI.FindName("ChkWifi")
-$ChkBackupAll = $UI.FindName("ChkBackupAll"); $ChkBackupNet = $UI.FindName("ChkBackupNet"); $ChkAnyDesk = $UI.FindName("ChkAnyDesk")
+$ChkWifi = $UI.FindName("ChkWifi")
+$ChkBackupAll = $UI.FindName("ChkBackupAll"); $ChkBackupNet = $UI.FindName("ChkBackupNet")
 $HopNhatKy = $UI.FindName("HopNhatKy"); $TxtTrangThai = $UI.FindName("TxtTrangThai"); $TxtPhanTram = $UI.FindName("TxtPhanTram")
 $ThanhTienDo = $UI.FindName("ThanhTienDo"); $NutKichHoat = $UI.FindName("NutKichHoat")
 
@@ -194,38 +183,6 @@ $ChkVisual = $UI.FindName("ChkVisual"); $ChkWidgets = $UI.FindName("ChkWidgets")
 $ChkSticky = $UI.FindName("ChkSticky"); $ChkNews = $UI.FindName("ChkNews"); $ChkTimezone = $UI.FindName("ChkTimezone")
 $ChkUAC = $UI.FindName("ChkUAC"); $ChkMenuClassic = $UI.FindName("ChkMenuClassic"); $ChkExt = $UI.FindName("ChkExt")
 $ChkNumLock = $UI.FindName("ChkNumLock"); $ChkWmic = $UI.FindName("ChkWmic")
-
-# ==========================================
-# KHỐI TỰ ĐỘNG ĐỒNG BỘ GITHUB CHO TAB 4 (V11.5 FIX)
-# ==========================================
-$KhungPhanMem = $UI.FindName("KhungPhanMem")
-$TxtTrangThaiApp = $UI.FindName("TxtTrangThaiApp")
-
-try {
-    # Ép chuẩn TLS 1.2 mạnh tay, tránh lỗi văng Exception trên bản Win cũ
-    [Net.ServicePointManager]::SecurityProtocol = 3072
-    $CSVUrl = "https://raw.githubusercontent.com/tuantran19912512/Windows-tool-box/refs/heads/main/DanhSachPhanMem.csv"
-    
-    # Ép xử lý dạng String -> Convert CSV (Giống file VietToolbox gốc)
-    $CSVRaw = Invoke-RestMethod -Uri $CSVUrl -UseBasicParsing -ErrorAction Stop
-    if ($CSVRaw -is [string]) { $CSV = ConvertFrom-Csv -InputObject $CSVRaw } else { $CSV = $CSVRaw }
-
-    $TxtTrangThaiApp.Text = "✅ Đã đồng bộ thành công danh sách từ Github VietToolbox:"
-    $TxtTrangThaiApp.Foreground = "#0284C7"
-    
-    foreach ($Row in $CSV) {
-        $Chk = New-Object System.Windows.Controls.CheckBox
-        $Chk.Content = $Row.Name
-        $Chk.IsChecked = ($Row.Check -match "(?i)True")
-        $Chk.Tag = $Row.Name
-        $Chk.FontSize = 13
-        $Chk.Margin = "0,0,10,12"
-        $KhungPhanMem.Children.Add($Chk) | Out-Null
-    }
-} catch {
-    $TxtTrangThaiApp.Text = "⚠️ Lỗi: Không thể kết nối tới Github! Vui lòng kiểm tra lại mạng. ($($_.Exception.Message))"
-    $TxtTrangThaiApp.Foreground = "#E11D48"
-}
 
 # Logic Checkbox
 $ChkBackupAll.Add_Click({ if ($ChkBackupAll.IsChecked) { $ChkBackupNet.IsChecked = $false } })
@@ -287,7 +244,7 @@ $NutChonDriver.Add_Click({ $F = New-Object System.Windows.Forms.FolderBrowserDia
 # 6. KỊCH BẢN NỀN (XỬ LÝ LÕI)
 # ==========================================
 $KichBanNen = {
-    param($G, $FileCai, $FileDriver, $IndexLoi, $GhiDeUnattend, $TenUser, $OOBE, $Logon, $TPM, $UltraView, $AnyDesk, $Wifi, $BackupAll, $BackupNet, $Tweaks,$APIKeys)
+    param($G, $FileCai, $FileDriver, $IndexLoi, $GhiDeUnattend, $TenUser, $OOBE, $Logon, $TPM, $Wifi, $BackupAll, $BackupNet, $Tweaks, $APIKeys)
     
     function InLog($txt) { $G.Log += "`n[$(Get-Date -f 'HH:mm:ss')] $txt" }
     
@@ -478,139 +435,19 @@ Get-AppxPackage -AllUsers | Where-Object { `$_.Name -notmatch '^System|^Microsof
             $Cmd += "for %%f in (`"%~dp0*.xml`") do netsh wlan connect name=`"%%~nf`" >nul 2>&1`r`n"
         }
         
-        $CanDoiMang = $UltraView -or $AnyDesk -or ($Tweaks.DanhSachPhanMem.Count -gt 0)
-        if ($CanDoiMang) {
-            $Cmd += "echo Dang doi Internet...`r`nping 127.0.0.1 -n 15 >nul`r`n"
-        }
 
         if ($UltraView) {
+            $Cmd += "ping 127.0.0.1 -n 10 >nul`r`n"
             $Cmd += "powershell -Command `"[Net.ServicePointManager]::SecurityProtocol = 3072; (New-Object Net.WebClient).DownloadFile('https://dl2.ultraviewer.net/UltraViewer_setup_6.6_vi.exe','C:\UltraView_Setup.exe')`"`r`n"
             $Cmd += "start /wait C:\UltraView_Setup.exe /verysilent /norestart`r`n"
             $Cmd += "start `"`" `"C:\Program Files (x86)\UltraViewer\UltraViewer_Desktop.exe`"`r`n"
             $Cmd += "del /f /q C:\UltraView_Setup.exe`r`n"
         }
 
-        if ($AnyDesk) { 
+        if ($AnyDesk) {
             $Cmd += "powershell -Command `"[Net.ServicePointManager]::SecurityProtocol = 3072; (New-Object Net.WebClient).DownloadFile('https://download.anydesk.com/AnyDesk.exe','C:\Users\Public\Desktop\AnyDesk.exe')`" >nul 2>&1`r`n"
-            $Cmd += "start `"`" `"C:\Users\Public\Desktop\AnyDesk.exe`"`r`n" 
+            $Cmd += "start `"`" `"C:\Users\Public\Desktop\AnyDesk.exe`"`r`n"
         }
-
-        # KHỐI TÍCH HỢP ĐỘNG API VIETTOOLBOX SAU KHI CÀI WIN XONG
-        if ($Tweaks.DanhSachPhanMem.Count -gt 0) {
-            InLog "Đóng gói mô-đun Tải Phần mềm tự động (Kế thừa từ VietToolbox)..."
-            $EscapedNames = $Tweaks.DanhSachPhanMem | ForEach-Object { [regex]::Escape($_) }
-            $RegexString = "^(" + ($EscapedNames -join "|") + ")$"
-            
-            $AppPS1 = @"
-[Net.ServicePointManager]::SecurityProtocol = 3072
-`$CSVUrl = "https://raw.githubusercontent.com/tuantran19912512/Windows-tool-box/refs/heads/main/DanhSachPhanMem.csv"
-try { 
-    `$CSVRaw = Invoke-RestMethod -Uri `$CSVUrl -UseBasicParsing 
-    if (`$CSVRaw -is [string]) { `$CSV = ConvertFrom-Csv -InputObject `$CSVRaw } else { `$CSV = `$CSVRaw }
-} catch { exit }
-
-`$MatchRegex = '$RegexString'
-`$ThuMucTam = "C:\VietToolbox_Temp"
-if (-not (Test-Path `$ThuMucTam)) { New-Item -ItemType Directory -Path `$ThuMucTam | Out-Null }
-
-function TuDong-NhanDienThamSoEXE (`$TenPhanMem, `$ThamSoTuCSV, `$DuongDanFile) {
-    if (-not [string]::IsNullOrWhiteSpace(`$ThamSoTuCSV)) { return `$ThamSoTuCSV }
-    `$ThuVien = [ordered]@{
-        "(?i)wps"                                   = "/S /ACCEPTEULA=1 AutoRun=0"
-        "(?i)foxit"                                 = "/quiet /force /lang en"
-        "(?i)chrome"                                = "--silent --do-not-launch-chrome"
-        "(?i)coccoc"                                = "--silent --do-not-launch-chrome"
-        "(?i)brave"                                 = "--silent"
-        "(?i)firefox"                               = "-ms"
-        "(?i)edge(?!.*unin)"                        = "--silent"
-        "(?i)opera"                                 = "--silent /install"
-        "(?i)zalo"                                  = "/S"
-        "(?i)telegram"                              = "/S"
-        "(?i)discord"                               = "-s"
-        "(?i)whatsapp"                              = "--silent"
-        "(?i)slack"                                 = "--silent"
-        "(?i)skype"                                 = "/VERYSILENT /SUPPRESSMSGBOXES"
-        "(?i)zoom"                                  = "/silent"
-        "(?i)teams"                                 = "--silent"
-        "(?i)winrar"                                = "/S"
-        "(?i)7-?zip"                                = "/S"
-        "(?i)bandizip"                              = "/S"
-        "(?i)vlc"                                   = "/L=1033 /S"
-        "(?i)k-?lite"                               = "/verysilent /norestart"
-        "(?i)potplayer"                             = "/S /SUPPRESSMSGBOXES"
-        "(?i)obs"                                   = "/S"
-        "(?i)anydesk"                               = "--install `"`$env:ProgramFiles\AnyDesk`" --start-with-win --silent"
-        "(?i)teamviewer"                            = "/S"
-        "(?i)ultraviewer"                           = "/silent"
-        "(?i)unikey|evkey"                          = "/S"
-        "(?i)java|jre\b|jdk\b"                      = "/s"
-        "(?i)adobe.*reader|acrobat.*reader"         = "/sAll /rs /msi EULA_ACCEPT=YES"
-        "(?i)notepad\+\+"                           = "/S"
-        "(?i)vscode|visual.?studio.?code"           = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /MERGETASKS=!runcode"
-        "(?i)git\b"                                 = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-"
-        "(?i)node|nodejs"                           = "/quiet /norestart"
-        "(?i)python"                                = "/quiet InstallAllUsers=1 PrependPath=1"
-        "(?i)office|microsoft 365"                  = "/quiet"
-        "(?i)malwarebytes"                          = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART"
-        "(?i)kaspersky"                             = "/s /pALL ACCEPT_LICENSE=1"
-        "(?i)eset"                                  = "/silent /accepteula"
-        "(?i)avast"                                 = "/silent /ws"
-        "(?i)winpcap|npcap"                         = "/S"
-        "(?i)wireshark"                             = "/S"
-        "(?i)putty"                                 = "/quiet"
-        "(?i)winscp"                                = "/VERYSILENT /SUPPRESSMSGBOXES"
-        "(?i)filezilla"                             = "/S"
-        "(?i)winmerge"                              = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART"
-        "(?i)virtualbox"                            = "--silent"
-        "(?i)vmware"                                = "/s /v/qn"
-        "(?i)handbrake"                             = "/S"
-        "(?i)audacity"                              = "/S"
-        "(?i)gimp"                                  = "/S"
-        "(?i)inkscape"                              = "/S"
-        "(?i)libreoffice"                           = "/quiet /norestart"
-        "(?i)sumatra"                               = "/S"
-        "(?i)irfanview"                             = "/silent"
-        "(?i)paint\.net"                            = "/auto"
-        "(?i)cpu-z|cpuz"                            = "/SILENT"
-        "(?i)gpu-z|gpuz"                            = "/S"
-        "(?i)hwinfo"                                = "/VERYSILENT"
-        "(?i)crystaldisk"                           = "/VERYSILENT /SUPPRESSMSGBOXES"
-        "(?i)speccy"                                = "/S"
-        "(?i)ccleaner"                              = "/S"
-        "(?i)everything"                            = "/S"
-        "(?i)greenshot"                             = "/VERYSILENT /SUPPRESSMSGBOXES"
-        "(?i)sharex"                                = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART"
-        "(?i)etcher|balena"                         = "--silent"
-    }
-    foreach (`$K in `$ThuVien.Keys) { if (`$TenPhanMem -match `$K) { return `$ThuVien[`$K] } }
-    return "/S"
-}
-
-foreach (`$row in `$CSV) {
-    if (`$row.Name -match `$MatchRegex) {
-        try {
-            `$TenFile = [System.IO.Path]::GetFileName(`$row.DownloadUrl)
-            if (-not `$TenFile -or `$TenFile -notmatch "\.") { `$TenFile = `$row.Name + ".exe" }
-            `$FileDest = Join-Path `$ThuMucTam `$TenFile
-            
-            Invoke-WebRequest -Uri `$row.DownloadUrl -OutFile `$FileDest -UseBasicParsing
-            
-            `$Arg = TuDong-NhanDienThamSoEXE `$row.Name `$row.SilentArgs ""
-            `$PInfo = New-Object System.Diagnostics.ProcessStartInfo
-            `$PInfo.FileName = `$FileDest
-            `$PInfo.Arguments = `$Arg
-            `$PInfo.UseShellExecute = `$true
-            `$P = [System.Diagnostics.Process]::Start(`$PInfo)
-            `$P.WaitForExit()
-        } catch {}
-    }
-}
-Remove-Item -Path `$ThuMucTam -Recurse -Force -ErrorAction SilentlyContinue
-"@
-            $AppPS1 | Out-File "$env:TEMP\AutoAppInstall_ZT.ps1" -Encoding utf8
-            $Cmd += "powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"C:\Windows\Setup\Scripts\AutoAppInstall_ZT.ps1`" >nul 2>&1`r`n"
-        }
-
         $Cmd += "del %0`r`n"
         $Cmd | Out-File "$env:TEMP\PostInstall_ZT.cmd" -Encoding oem
 
@@ -635,7 +472,7 @@ Remove-Item -Path `$ThuMucTam -Recurse -Force -ErrorAction SilentlyContinue
         
         if ($Tweaks.Bloatware) { Copy-Item "$env:TEMP\RemoveBloat_ZT.ps1" "$ThuMucMnt\Windows\System32\RemoveBloat_ZT.ps1" -Force }
         if ($GhiDeUnattend -and (Test-Path "$env:TEMP\unattend_ZT.xml")) { Copy-Item "$env:TEMP\unattend_ZT.xml" "$ThuMucMnt\Windows\System32\unattend_ZT.xml" -Force }
-        if (Test-Path "$env:TEMP\AutoAppInstall_ZT.ps1") { Copy-Item "$env:TEMP\AutoAppInstall_ZT.ps1" "$ThuMucMnt\Windows\System32\AutoAppInstall_ZT.ps1" -Force }
+
         
         # --- BƯỚC 6: LỆNH CHẠY TRONG WINRE (OFFLINE REGISTRY INJECTION) ---
         $G.TrangThai = "BƯỚC 6/6: Ghi kịch bản tự động hóa..."; $G.TienDo = 80
@@ -690,7 +527,6 @@ bcdedit /timeout 0 & bcdedit /set {default} recoveryenabled No & bcdedit /set {d
 copy /Y X:\Windows\System32\PostInstall_ZT.cmd W:\Windows\Setup\Scripts\PostInstall_ZT.cmd
 copy /Y X:\Windows\System32\UserTweaks_ZT.cmd W:\Windows\Setup\Scripts\UserTweaks_ZT.cmd
 if exist X:\Windows\System32\RemoveBloat_ZT.ps1 ( copy /Y X:\Windows\System32\RemoveBloat_ZT.ps1 W:\Windows\Setup\Scripts\RemoveBloat_ZT.ps1 )
-if exist X:\Windows\System32\AutoAppInstall_ZT.ps1 ( copy /Y X:\Windows\System32\AutoAppInstall_ZT.ps1 W:\Windows\Setup\Scripts\AutoAppInstall_ZT.ps1 )
 
 :: Xử lý Unattend
 if exist X:\Windows\System32\unattend_ZT.xml ( 
@@ -714,7 +550,7 @@ wpeutil reboot
         reagentc.exe /setreimage /path C:\Windows\System32\Recovery | Out-Null; reagentc.exe /enable | Out-Null; reagentc.exe /boottore | Out-Null
         $G.TienDo = 100
     } catch { $G.Loi = $_.Exception.Message } finally { 
-        Remove-Item "$env:TEMP\unattend_ZT.xml", "$env:TEMP\PostInstall_ZT.cmd", "$env:TEMP\UserTweaks_ZT.cmd", "$env:TEMP\RemoveBloat_ZT.ps1", "$env:TEMP\AutoAppInstall_ZT.ps1" -Force -ErrorAction SilentlyContinue
+        Remove-Item "$env:TEMP\unattend_ZT.xml", "$env:TEMP\PostInstall_ZT.cmd", "$env:TEMP\UserTweaks_ZT.cmd", "$env:TEMP\RemoveBloat_ZT.ps1" -Force -ErrorAction SilentlyContinue
         $G.KetThuc = $true 
     }
 }
@@ -727,11 +563,9 @@ $NutKichHoat.Add_Click({
     if ([System.Windows.Forms.MessageBox]::Show("HỆ THỐNG SẼ FORMAT Ổ C.`nTiếp tục?", "CẢNH BÁO", 4, 48) -ne 'Yes') { return }
 
     # Quét danh sách phần mềm đã chọn từ Tab 4
-    $KhungPhanMem = $UI.FindName("KhungPhanMem")
+
     $DanhSachAppDaChon = @()
-    if ($KhungPhanMem.Children) {
-        foreach ($Chk in $KhungPhanMem.Children) {
-            if ($Chk.IsChecked) { $DanhSachAppDaChon += $Chk.Tag }
+
         }
     }
 
@@ -747,7 +581,7 @@ $NutKichHoat.Add_Click({
         Sticky = $ChkSticky.IsChecked; News = $ChkNews.IsChecked; Timezone = $ChkTimezone.IsChecked;
         UAC = $ChkUAC.IsChecked; MenuClassic = $ChkMenuClassic.IsChecked; Ext = $ChkExt.IsChecked;
         NumLock = $ChkNumLock.IsChecked; Wmic = $ChkWmic.IsChecked;
-        DanhSachPhanMem = $DanhSachAppDaChon
+
     }
 
     $MoiTruong = [runspacefactory]::CreateRunspace(); $MoiTruong.ApartmentState = "STA"; $MoiTruong.Open()
