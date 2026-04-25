@@ -562,13 +562,6 @@ $NutKichHoat.Add_Click({
     if ( ($ChkBackupAll.IsChecked -or $ChkBackupNet.IsChecked -or $ChkWifi.IsChecked) -and -not $FileDriver ) { [System.Windows.Forms.MessageBox]::Show("Để Backup Driver/Wi-Fi, vui lòng 'Chọn Driver'.", "LỖI", 0, 16); return }
     if ([System.Windows.Forms.MessageBox]::Show("HỆ THỐNG SẼ FORMAT Ổ C.`nTiếp tục?", "CẢNH BÁO", 4, 48) -ne 'Yes') { return }
 
-    # Quét danh sách phần mềm đã chọn từ Tab 4
-
-    $DanhSachAppDaChon = @()
-
-        }
-    }
-
     $UI.Cursor = [System.Windows.Input.Cursors]::Wait; $NutKichHoat.IsEnabled = $false
     $Global:TrangThaiHethong.TienDo = 0; $Global:TrangThaiHethong.Log = ""; $Global:TrangThaiHethong.KetThuc = $false; $DongHoTimer.Start()
 
