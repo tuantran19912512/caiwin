@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
-    CÔNG CỤ TRIỂN KHAI WINDOWS TỰ ĐỘNG - BẢN TIÊU CHUẨN (ZERO-TOUCH PURE)
-    Tối ưu hóa: Offline Registry, Unattend, Smart Driver Network, Bloatware Safe Mode
+    CÔNG CỤ TRIỂN KHAI WINDOWS TỰ ĐỘNG - V12 (BẢN HOÀN HẢO)
+    Tối ưu hóa: Offline Registry, Unattend Custom Hostname, Future Update Bypass
 #>
 
 # ==========================================
@@ -24,11 +24,11 @@ $Global:TrangThaiHethong = [hashtable]::Synchronized(@{
 })
 
 # ==========================================
-# 3. GIAO DIỆN WPF (3 TAB TIÊU CHUẨN)
+# 3. GIAO DIỆN WPF
 # ==========================================
 [xml]$XAML = @"
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        Title="Zero-Touch OS Deployment (Stable Edition)" 
+        Title="Zero-Touch OS Deployment V12 (Perfect Edition)" 
         Width="880" Height="780" MinWidth="800" MinHeight="650" 
         WindowStartupLocation="CenterScreen" Background="#F8FAFC">
     <DockPanel Margin="15">
@@ -87,13 +87,20 @@ $Global:TrangThaiHethong = [hashtable]::Synchronized(@{
 
                 <TabItem Header="⚙️ HỆ THỐNG" FontSize="14" FontWeight="Bold" Foreground="#0F172A">
                     <StackPanel Margin="10,15,10,10">
-                        <TextBlock Text="Cấu hình Tài khoản &amp; Unattend.xml:" FontWeight="Bold" Foreground="#0284C7" Margin="0,0,0,10" FontSize="15"/>
-                        <CheckBox Name="ChkGhiDeUnattend" Content="Can thiệp Hệ thống (Tạo User, Region US-VN) - Bỏ tick nếu dùng WIM Mod" IsChecked="True" FontWeight="Bold" Foreground="#334155" Margin="0,0,0,10" FontSize="13"/>
+                        <TextBlock Text="Cấu hình Định danh &amp; Unattend.xml:" FontWeight="Bold" Foreground="#0284C7" Margin="0,0,0,10" FontSize="15"/>
+                        <CheckBox Name="ChkGhiDeUnattend" Content="Can thiệp Hệ thống (Tạo User, Tên Máy, Region VN)" IsChecked="True" FontWeight="Bold" Foreground="#334155" Margin="0,0,0,10" FontSize="13"/>
                         <StackPanel Name="KhuVucRegion" Margin="25,0,0,15">
                             <Grid Margin="0,0,0,2">
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="130"/><ColumnDefinition Width="200"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                <TextBlock Text="Tên Tài Khoản:" VerticalAlignment="Center" Foreground="#475569" FontWeight="Bold" FontSize="13"/>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="90"/>
+                                    <ColumnDefinition Width="160"/>
+                                    <ColumnDefinition Width="90"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Tên User:" VerticalAlignment="Center" Foreground="#475569" FontWeight="Bold" FontSize="13"/>
                                 <TextBox Name="TxtTenUser" Grid.Column="1" Height="30" VerticalContentAlignment="Center" Text="Admin" FontWeight="Bold" Padding="10,0"/>
+                                <TextBlock Text="Tên Máy:" Grid.Column="2" VerticalAlignment="Center" Foreground="#475569" FontWeight="Bold" FontSize="13" Margin="15,0,0,0"/>
+                                <TextBox Name="TxtTenMay" Grid.Column="3" Height="30" VerticalContentAlignment="Center" Text="PC-OFFICE" FontWeight="Bold" Padding="10,0"/>
                             </Grid>
                         </StackPanel>
                         <Border BorderThickness="0,1,0,0" BorderBrush="#E2E8F0" Margin="0,10,0,20"/>
@@ -103,7 +110,7 @@ $Global:TrangThaiHethong = [hashtable]::Synchronized(@{
                             <CheckBox Name="ChkLogon" Content="Auto Logon vào Desktop" IsChecked="True" FontWeight="Bold" Margin="0,0,0,12" FontSize="13"/>
                             <CheckBox Name="ChkBackupAll" Content="Rút Toàn bộ Driver máy" IsChecked="False" FontWeight="Bold" Margin="0,0,0,12" FontSize="13"/>
                             <CheckBox Name="ChkBackupNet" Content="Chỉ rút Driver LAN/Wi-Fi" IsChecked="True" Foreground="#D97706" FontWeight="Bold" Margin="0,0,0,12" FontSize="13"/>
-                            <CheckBox Name="ChkTPM" Content="Bypass TPM 2.0 &amp; CPU" IsChecked="True" Foreground="#E11D48" FontWeight="Bold" Margin="0,0,0,12" FontSize="13"/>
+                            <CheckBox Name="ChkTPM" Content="Bypass TPM 2.0 &amp; Auto Update" IsChecked="True" Foreground="#E11D48" FontWeight="Bold" Margin="0,0,0,12" FontSize="13"/>
                             <CheckBox Name="ChkUltraView" Content="Tải &amp; Bật UltraView (Hiện ngay)" IsChecked="True" Foreground="#0284C7" FontWeight="Bold" FontSize="13" Margin="0,0,0,12"/>
                             <CheckBox Name="ChkWifi" Content="Lưu Pass &amp; Tên Wi-Fi" IsChecked="True" Foreground="#D97706" FontWeight="Bold" FontSize="13" Margin="0,0,0,12"/>
                             <CheckBox Name="ChkAnyDesk" Content="Tải AnyDesk (Hiện ngay)" IsChecked="False" FontSize="13" Margin="0,0,0,12"/>
@@ -157,7 +164,8 @@ $TrinhDoc = (New-Object System.Xml.XmlNodeReader $XAML); $UI = [Windows.Markup.X
 
 # Ánh xạ Biến Giao diện
 $HopFileBoCai = $UI.FindName("HopFileBoCai"); $NutChonFile = $UI.FindName("NutChonFile"); $DanhSachBanWin = $UI.FindName("DanhSachBanWin")
-$HopThuMucDriver = $UI.FindName("HopThuMucDriver"); $NutChonDriver = $UI.FindName("NutChonDriver"); $TxtTenUser = $UI.FindName("TxtTenUser")
+$HopThuMucDriver = $UI.FindName("HopThuMucDriver"); $NutChonDriver = $UI.FindName("NutChonDriver")
+$TxtTenUser = $UI.FindName("TxtTenUser"); $TxtTenMay = $UI.FindName("TxtTenMay")
 $ChkGhiDeUnattend = $UI.FindName("ChkGhiDeUnattend"); $KhuVucRegion = $UI.FindName("KhuVucRegion")
 $ChkOOBE = $UI.FindName("ChkOOBE"); $ChkLogon = $UI.FindName("ChkLogon"); $ChkTPM = $UI.FindName("ChkTPM")
 $ChkUltraView = $UI.FindName("ChkUltraView"); $ChkWifi = $UI.FindName("ChkWifi")
@@ -233,7 +241,7 @@ $NutChonDriver.Add_Click({ $F = New-Object System.Windows.Forms.FolderBrowserDia
 # 6. KỊCH BẢN NỀN (XỬ LÝ LÕI)
 # ==========================================
 $KichBanNen = {
-    param($G, $FileCai, $FileDriver, $IndexLoi, $GhiDeUnattend, $TenUser, $OOBE, $Logon, $TPM, $UltraView, $AnyDesk, $Wifi, $BackupAll, $BackupNet, $Tweaks)
+    param($G, $FileCai, $FileDriver, $IndexLoi, $GhiDeUnattend, $TenUser, $TenMay, $OOBE, $Logon, $TPM, $UltraView, $AnyDesk, $Wifi, $BackupAll, $BackupNet, $Tweaks)
     
     function InLog($txt) { $G.Log += "`n[$(Get-Date -f 'HH:mm:ss')] $txt" }
     
@@ -299,7 +307,7 @@ $KichBanNen = {
         $G.TienDo = 40; $G.TrangThai = "BƯỚC 3/6: Kiến tạo XML & Tweak Nền..."
         $DuongDanTuongDoiWin = if ($FileCai.Length -gt 3) { $FileCai.Substring(3) } else { "" }
 
-        # --- BƯỚC 3: TẠO UNATTEND.XML CHUẨN UTF-8 ---
+        # --- BƯỚC 3: TẠO UNATTEND.XML CHUẨN UTF-8 (CÓ TÊN MÁY TÍNH) ---
         if ($GhiDeUnattend) {
             if ($OOBE) {
                 $KhốiUser = ""; $KhốiLogonXML = ""
@@ -327,11 +335,14 @@ $KichBanNen = {
 "@
                 }
 
+                $TenMayBlock = if (-not [string]::IsNullOrWhiteSpace($TenMay)) { "<ComputerName>$TenMay</ComputerName>" } else { "" }
+
                 $UnattendXML = @"
 <?xml version="1.0" encoding="utf-8"?>
 <unattend xmlns="urn:schemas-microsoft-com:unattend" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
     <settings pass="specialize">
         <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+            $TenMayBlock
             <TimeZone>SE Asia Standard Time</TimeZone>
         </component>
     </settings>
@@ -478,9 +489,13 @@ reg unload HKLM\ZT_SOFT
         if ($TPM) {
             $BypassRegistryCmd += @"
 
-:: TIÊM REGISTRY BYPASS TPM
+:: TIÊM REGISTRY BYPASS WIN 11 CHO MÁY CŨ ĐỂ KHÔNG BỊ CHẶN UPDATE SAU NÀY
 reg load HKLM\ZT_SYS W:\Windows\System32\config\SYSTEM
 reg add "HKLM\ZT_SYS\Setup\MoSetup" /v AllowUpgradesWithUnsupportedTPMOrCPU /t REG_DWORD /d 1 /f
+reg add "HKLM\ZT_SYS\Setup\LabConfig" /v BypassTPMCheck /t REG_DWORD /d 1 /f
+reg add "HKLM\ZT_SYS\Setup\LabConfig" /v BypassSecureBootCheck /t REG_DWORD /d 1 /f
+reg add "HKLM\ZT_SYS\Setup\LabConfig" /v BypassRAMCheck /t REG_DWORD /d 1 /f
+reg add "HKLM\ZT_SYS\Setup\LabConfig" /v BypassStorageCheck /t REG_DWORD /d 1 /f
 reg unload HKLM\ZT_SYS
 "@
         }
@@ -561,7 +576,7 @@ $NutKichHoat.Add_Click({
     }
 
     $MoiTruong = [runspacefactory]::CreateRunspace(); $MoiTruong.ApartmentState = "STA"; $MoiTruong.Open()
-    $TienTrinh = [powershell]::Create().AddScript($KichBanNen).AddArgument($Global:TrangThaiHethong).AddArgument($FileCai).AddArgument($FileDriver).AddArgument($IndexLoi).AddArgument($ChkGhiDeUnattend.IsChecked).AddArgument($TxtTenUser.Text).AddArgument($ChkOOBE.IsChecked).AddArgument($ChkLogon.IsChecked).AddArgument($ChkTPM.IsChecked).AddArgument($ChkUltraView.IsChecked).AddArgument($ChkAnyDesk.IsChecked).AddArgument($ChkWifi.IsChecked).AddArgument($ChkBackupAll.IsChecked).AddArgument($ChkBackupNet.IsChecked).AddArgument($Tweaks)
+    $TienTrinh = [powershell]::Create().AddScript($KichBanNen).AddArgument($Global:TrangThaiHethong).AddArgument($FileCai).AddArgument($FileDriver).AddArgument($IndexLoi).AddArgument($ChkGhiDeUnattend.IsChecked).AddArgument($TxtTenUser.Text).AddArgument($TxtTenMay.Text).AddArgument($ChkOOBE.IsChecked).AddArgument($ChkLogon.IsChecked).AddArgument($ChkTPM.IsChecked).AddArgument($ChkUltraView.IsChecked).AddArgument($ChkAnyDesk.IsChecked).AddArgument($ChkWifi.IsChecked).AddArgument($ChkBackupAll.IsChecked).AddArgument($ChkBackupNet.IsChecked).AddArgument($Tweaks)
     $TienTrinh.Runspace = $MoiTruong; $TienTrinh.BeginInvoke() | Out-Null
 })
 
