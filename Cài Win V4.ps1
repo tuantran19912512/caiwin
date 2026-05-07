@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
-    CÔNG CỤ TRIỂN KHAI WINDOWS TỰ ĐỘNG - V12 (BẢN HOÀN HẢO)
-    Tối ưu hóa: Offline Registry, Unattend Custom Hostname, Future Update Bypass
+    CÔNG CỤ TRIỂN KHAI WINDOWS TỰ ĐỘNG - V13 (ANTI-BITLOCKER EDITION)
+    Tối ưu hóa: Trệt tiêu BitLocker (Pre/Post/Offline), Custom Hostname, Bypass Win 11 Update
 #>
 
 # ==========================================
@@ -28,7 +28,7 @@ $Global:TrangThaiHethong = [hashtable]::Synchronized(@{
 # ==========================================
 [xml]$XAML = @"
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        Title="Zero-Touch OS Deployment V12 (Perfect Edition)" 
+        Title="Zero-Touch OS Deployment V13 (Anti-BitLocker)" 
         Width="880" Height="780" MinWidth="800" MinHeight="650" 
         WindowStartupLocation="CenterScreen" Background="#F8FAFC">
     <DockPanel Margin="15">
@@ -108,12 +108,12 @@ $Global:TrangThaiHethong = [hashtable]::Synchronized(@{
                         <UniformGrid Columns="2" VerticalAlignment="Top">
                             <CheckBox Name="ChkOOBE" Content="Tiêu diệt Màn hình xanh OOBE" IsChecked="True" FontWeight="Bold" Margin="0,0,0,12" FontSize="13"/>
                             <CheckBox Name="ChkLogon" Content="Auto Logon vào Desktop" IsChecked="True" FontWeight="Bold" Margin="0,0,0,12" FontSize="13"/>
+                            <CheckBox Name="ChkBitlocker" Content="Diệt BitLocker (Trước &amp; Sau cài)" IsChecked="True" Foreground="#E11D48" FontWeight="Bold" Margin="0,0,0,12" FontSize="13"/>
+                            <CheckBox Name="ChkTPM" Content="Bypass TPM 2.0 &amp; Auto Update" IsChecked="True" Foreground="#E11D48" FontWeight="Bold" Margin="0,0,0,12" FontSize="13"/>
                             <CheckBox Name="ChkBackupAll" Content="Rút Toàn bộ Driver máy" IsChecked="False" FontWeight="Bold" Margin="0,0,0,12" FontSize="13"/>
                             <CheckBox Name="ChkBackupNet" Content="Chỉ rút Driver LAN/Wi-Fi" IsChecked="True" Foreground="#D97706" FontWeight="Bold" Margin="0,0,0,12" FontSize="13"/>
-                            <CheckBox Name="ChkTPM" Content="Bypass TPM 2.0 &amp; Auto Update" IsChecked="True" Foreground="#E11D48" FontWeight="Bold" Margin="0,0,0,12" FontSize="13"/>
                             <CheckBox Name="ChkUltraView" Content="Tải &amp; Bật UltraView (Hiện ngay)" IsChecked="True" Foreground="#0284C7" FontWeight="Bold" FontSize="13" Margin="0,0,0,12"/>
                             <CheckBox Name="ChkWifi" Content="Lưu Pass &amp; Tên Wi-Fi" IsChecked="True" Foreground="#D97706" FontWeight="Bold" FontSize="13" Margin="0,0,0,12"/>
-                            <CheckBox Name="ChkAnyDesk" Content="Tải AnyDesk (Hiện ngay)" IsChecked="False" FontSize="13" Margin="0,0,0,12"/>
                         </UniformGrid>
                     </StackPanel>
                 </TabItem>
@@ -168,8 +168,8 @@ $HopThuMucDriver = $UI.FindName("HopThuMucDriver"); $NutChonDriver = $UI.FindNam
 $TxtTenUser = $UI.FindName("TxtTenUser"); $TxtTenMay = $UI.FindName("TxtTenMay")
 $ChkGhiDeUnattend = $UI.FindName("ChkGhiDeUnattend"); $KhuVucRegion = $UI.FindName("KhuVucRegion")
 $ChkOOBE = $UI.FindName("ChkOOBE"); $ChkLogon = $UI.FindName("ChkLogon"); $ChkTPM = $UI.FindName("ChkTPM")
-$ChkUltraView = $UI.FindName("ChkUltraView"); $ChkWifi = $UI.FindName("ChkWifi")
-$ChkBackupAll = $UI.FindName("ChkBackupAll"); $ChkBackupNet = $UI.FindName("ChkBackupNet"); $ChkAnyDesk = $UI.FindName("ChkAnyDesk")
+$ChkBitlocker = $UI.FindName("ChkBitlocker"); $ChkUltraView = $UI.FindName("ChkUltraView"); $ChkWifi = $UI.FindName("ChkWifi")
+$ChkBackupAll = $UI.FindName("ChkBackupAll"); $ChkBackupNet = $UI.FindName("ChkBackupNet")
 $HopNhatKy = $UI.FindName("HopNhatKy"); $TxtTrangThai = $UI.FindName("TxtTrangThai"); $TxtPhanTram = $UI.FindName("TxtPhanTram")
 $ThanhTienDo = $UI.FindName("ThanhTienDo"); $NutKichHoat = $UI.FindName("NutKichHoat")
 
@@ -247,6 +247,19 @@ $KichBanNen = {
     
     try {
         InLog "🚀 BẮT ĐẦU CHUỖI QUY TRÌNH ZERO-TOUCH VÀ OPTIMIZER..."
+
+        # --- XỬ LÝ BITLOCKER (TRƯỚC KHI REBOOT VÀO WINRE) ---
+        if ($Tweaks.BitLocker) {
+            InLog "Đang xử lý vô hiệu hóa BitLocker toàn hệ thống..."
+            foreach ($KyTu in 67..90) { 
+                $Drive = [char]$KyTu + ":"
+                if (Test-Path $Drive) {
+                    cmd.exe /c "manage-bde -protectors -disable $Drive >nul 2>&1"
+                    cmd.exe /c "manage-bde -off $Drive >nul 2>&1"
+                }
+            }
+            InLog "✅ Đã mở khóa an toàn các phân vùng."
+        }
         
         # --- BƯỚC 1: BACKUP DRIVER & NETWORK ---
         $MarkerName = "THUMUC_KHONG_TON_TAI.txt"; $ThuMucDriverTuongDoi = ""
@@ -375,7 +388,13 @@ $KhốiUser$KhốiLogonXML
         # --- BƯỚC 4: TẠO SCRIPT POST-INSTALL & TWEAKS ---
         $G.TrangThai = "BƯỚC 4/6: Đóng gói Script Hệ thống..."; $G.TienDo = 50
         $Cmd = "@echo off`r`n"
-        $Cmd += "manage-bde -off C: >nul 2>&1`r`n"
+        
+        # Xử lý BitLocker Post-Install
+        if ($Tweaks.BitLocker) {
+            $Cmd += "for %%d in (C D E F G H I J K L M N O P Q R S T U V W X Y Z) do manage-bde -off %%d: >nul 2>&1`r`n"
+        } else {
+            $Cmd += "manage-bde -off C: >nul 2>&1`r`n"
+        }
         
         InLog "Biên dịch 24 tùy chọn Windows Optimizer..."
         if ($Tweaks.UAC) { $Cmd += "reg add `"HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System`" /v EnableLUA /t REG_DWORD /d 0 /f >nul 2>&1`r`n" }
@@ -477,7 +496,7 @@ Get-AppxPackage -AllUsers | Where-Object { `$_.Name -notmatch '^System|^Microsof
 
         $BypassRegistryCmd = ""
         if ($OOBE -and $Logon) {
-            $BypassRegistryCmd = @"
+            $BypassRegistryCmd += @"
 :: TIÊM REGISTRY NGOẠI TUYẾN ĐỂ BYPASS TÀI KHOẢN MICROSOFT VÀ ÉP AUTO LOGON
 reg load HKLM\ZT_SOFT W:\Windows\System32\config\SOFTWARE
 reg add "HKLM\ZT_SOFT\Microsoft\Windows\CurrentVersion\OOBE" /v BypassNRO /t REG_DWORD /d 1 /f
@@ -486,18 +505,25 @@ reg add "HKLM\ZT_SOFT\Microsoft\Windows NT\CurrentVersion\Winlogon" /v DefaultUs
 reg unload HKLM\ZT_SOFT
 "@
         }
-        if ($TPM) {
-            $BypassRegistryCmd += @"
 
-:: TIÊM REGISTRY BYPASS WIN 11 CHO MÁY CŨ ĐỂ KHÔNG BỊ CHẶN UPDATE SAU NÀY
-reg load HKLM\ZT_SYS W:\Windows\System32\config\SYSTEM
+        $SysRegCmd = ""
+        if ($TPM) {
+            $SysRegCmd += @"
 reg add "HKLM\ZT_SYS\Setup\MoSetup" /v AllowUpgradesWithUnsupportedTPMOrCPU /t REG_DWORD /d 1 /f
 reg add "HKLM\ZT_SYS\Setup\LabConfig" /v BypassTPMCheck /t REG_DWORD /d 1 /f
 reg add "HKLM\ZT_SYS\Setup\LabConfig" /v BypassSecureBootCheck /t REG_DWORD /d 1 /f
 reg add "HKLM\ZT_SYS\Setup\LabConfig" /v BypassRAMCheck /t REG_DWORD /d 1 /f
 reg add "HKLM\ZT_SYS\Setup\LabConfig" /v BypassStorageCheck /t REG_DWORD /d 1 /f
-reg unload HKLM\ZT_SYS
 "@
+        }
+        if ($Tweaks.BitLocker) {
+            $SysRegCmd += @"
+reg add "HKLM\ZT_SYS\ControlSet001\Control\BitLocker" /v PreventDeviceEncryption /t REG_DWORD /d 1 /f
+"@
+        }
+
+        if ($SysRegCmd) {
+            $BypassRegistryCmd += "`nreg load HKLM\ZT_SYS W:\Windows\System32\config\SYSTEM`n" + $SysRegCmd.Trim() + "`nreg unload HKLM\ZT_SYS`n"
         }
 
         @"
@@ -572,7 +598,7 @@ $NutKichHoat.Add_Click({
         Visual = $ChkVisual.IsChecked; Widgets = $ChkWidgets.IsChecked; Notif = $ChkNotif.IsChecked;
         Sticky = $ChkSticky.IsChecked; News = $ChkNews.IsChecked; Timezone = $ChkTimezone.IsChecked;
         UAC = $ChkUAC.IsChecked; MenuClassic = $ChkMenuClassic.IsChecked; Ext = $ChkExt.IsChecked;
-        NumLock = $ChkNumLock.IsChecked; Wmic = $ChkWmic.IsChecked
+        NumLock = $ChkNumLock.IsChecked; Wmic = $ChkWmic.IsChecked; BitLocker = $ChkBitlocker.IsChecked
     }
 
     $MoiTruong = [runspacefactory]::CreateRunspace(); $MoiTruong.ApartmentState = "STA"; $MoiTruong.Open()
